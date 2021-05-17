@@ -1,0 +1,82 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body{
+    height: 100%;
+}
+
+html {
+    font-family: -apple-system;
+    background: linear-gradient(to right, #57c1eb 0%, #246fa8 100%);
+    font-size: 10px;
+}
+body {
+    display: grid;
+    place-items: center;
+}
+
+#register_container {
+    display: grid;
+    align-items: center;
+    align-content: center;
+    place-items: center;
+    min-width: 300px;
+    max-width: 1600px;
+    max-height: 500px;
+    width: 100%;
+    height: 95vh;
+    background: white;
+    border-radius: 10px;
+}
+
+#register_form{
+    display: grid;
+}
+
+#register_form > input{
+    height: 40px;
+    width: 200px;
+}
+
+#register_form > a{
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#title_signin{
+    margin: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+#password{
+    height: 40px;
+    width: 200px;
+}
+
+#repassword{
+    height: 40px;
+    width: 200px;
+}
+
+#bt_register{
+    cursor: pointer;
+    color: #fff;
+    margin-top: 10px;
+    place-items: center;
+    height: 40px;
+    background: #0048AA;
+    border: none;
+    border-radius: 1px;
+}
+
+#bt_register.active,
+#bt_register:hover{
+    cursor: pointer;
+    background: #002C88;
+}

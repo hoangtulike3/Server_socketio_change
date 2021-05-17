@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ThingTalk</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../jquery.js"></script>
+    <script src="chat_ui.js"></script>
+    <link rel="stylesheet" type="text/css" href="chat_ui.css"/>
+</head>
+<body>
+    <div class="container">
+        <div id=chat_container> <!--id=chat_form-->
+            <div id="seach_container">
+                <input type="text" placeholder="Seach"/>
+            </div>
+            <div id="coversation_list">
+
+            </div>
+            <div id="new_message_container">
+                <a href="#">+</a>
+            </div>
+            <div id="chat_title">
+                <span id="name_roomchat">CHAT IN ROOM:</span>
+                <img id="bt_delete" src="/icon/trash.png" alt="Delete Conversation" />
+            </div>
+            <div id="chat_message_list">
+
+            </div>
+            <div id="chat_form">
+                <img src="/icon/attach.png" alt="Add Attachment" />
+                <input id="chat_only" type="text" placeholder="Type a message" />
+            </div>
+        </div>
+    </div>
+</body>
+</html>

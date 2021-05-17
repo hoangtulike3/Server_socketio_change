@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log in</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../jquery.js"></script>
+    <script src="login.js"></script>
+    <link rel="stylesheet" type="text/css" href="login.css"/>
+</head>
+<body>
+    <div class="container">
+        <div id="signin_container">
+            <img src="/icon/logo_cwe.png" alt="Logo CompanyWe"/>
+            <div id="title_signin">
+                PLEASE SIGN IN
+            </div>
+            <div id="signin_form">
+                <input id="user" type="text" placeholder="Username"/>
+                <input id="password" type="password" placeholder="Password"/>
+                <button id="bt_signin" type="button">SIGN IN</button>
+                <button id="bt_register" type="button">Register</button> <!--onclick="location.href='/page/register/register.html'"-->
+            </div>
+        </div>
+    </div>
+</body>
+</html>
