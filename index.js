@@ -7,8 +7,6 @@ var server = require("http").createServer(app);
 var io = require("socket.io")(server);
 server.listen(process.env.port || 3000);
 
-var users=[];
-
 const {  Client } = require('pg')
 
 const client = new Client({
@@ -55,8 +53,7 @@ async function delete_chat(name, room){
 
 io.on('connection', (socket) => {
     // console.log("Connected");
-    socket.on('register', async (username, displayname, phonenumber, password) => {
-        const check_user = await client.query("SELECT * FROM users WHERE username = '"+ username +"'");
+    socket.on('register', (username, displayname, phonenumber, password) => {
         //Add new user
         const text = "INSERT INTO users(username, displayname, phone, password, status) VALUES($1, $2, $3, $4, $5) RETURNING *";
         const values = [username, displayname, phonenumber, password, true];
@@ -69,71 +66,103 @@ io.on('connection', (socket) => {
             //console.log("Insert_chat")
             socket.emit("register", true);
             }
-        })
+        });
     });
 
     socket.on('signin', async (user, password)=>{
         try
         {
             const pw = await client.query("SELECT password FROM users WHERE username = '"+ user +"'");
+            const stt = await client.query("SELECT status FROM users WHERE username = '"+ user +"'");
             // console.log(pw.rows[0].password);
-            if(password == pw.rows[0].password)
+            if(password == pw.rows[0].password && stt.rows[0].status == true)
             {
-                socket.emit('signin', true)
+                socket.emit('signin', true);
+                socket.emit('infor', user);
             }
             else
             {
-                socket.emit('signin', false)
+                socket.emit('signin', false);
             }
         }
         catch(error)
         {
-            socket.emit('signin', false)
+            socket.emit('signin', false);
         }
         
     });
 
-    socket.on('signin0', async (name, room) => {
-        if(users.indexOf(name)>=0){
-            socket.emit("signin_fail");
-        }
-        else{
-            users.push(name);
-            socket.name = name;
-            socket.room = room;
-            socket.broadcast.in(socket.room).emit("message_connected", name);
-            socket.emit("signin_success");
-            io.sockets.emit('list_user', users);
-            socket.join(room);
-            //GET DATA OLD
-            try //GET NEW CHAT MESSAGE AFTER CLICK DELETE
-            {
-                const time_deleted = await client.query("SELECT time FROM delete_chattext WHERE room = '"+ socket.room +"' AND name = '"+ socket.name +"'");
-                const date_deleted = await client.query("SELECT TO_CHAR(date :: DATE, 'yyyy-mm-dd') from delete_chattext WHERE room = '"+ socket.room +"' AND name = '"+ socket.name +"'");
-                const result = await client.query("SELECT * FROM thingtalk WHERE time >= '"+ time_deleted.rows[time_deleted.rows.length-1].time +"' AND date >= '"+ date_deleted.rows[date_deleted.rows.length-1].to_char +"'");
-                socket.emit("old_message", result.rows, socket.name);
-                // console.log("log new data after delete");
-        }
-            catch(error) //GET ALL CHAT MESSAGE WITH USER NOT HAVE DELETE INFO
-            {
-                const result = await client.query("SELECT * FROM thingtalk WHERE room = '"+ socket.room +"'");
-                socket.emit("old_message", result.rows, socket.name);
-                // console.log("log old data all");
+    socket.on('add_room', async (roomname, username) => {
+        const text = "INSERT INTO rooms(room_name, user_in_room) VALUES($1, $2) RETURNING *";
+        const values = [roomname, username];
+        // callback
+        client.query(text, values, (err, res) => {
+            if (err) {
+                console.log(err.stack)  
+            } else {
+            // console.log("added_room")
             }
-        };
+        });
+        const rooms_list = await client.query("SELECT room_name FROM rooms WHERE user_in_room = '"+ username +"'");
+                var rooms = [];
+                for(i=0; i<rooms_list.rows.length; i++)
+                {
+                    rooms[i] = rooms_list.rows[i];
+                };
+                socket.emit('list_room', rooms);
     });
     
-    socket.on('disconnect', () => {
-        if(users.indexOf(socket.name)>=0){
-            users.splice(users.indexOf(socket.name), 1);
-            socket.broadcast.in(socket.room).emit("message_disconnected", socket.name);
-            io.sockets.emit('list_user', users);
+    socket.on('list_room', async (username) =>{
+        const rooms_list = await client.query("SELECT room_name FROM rooms WHERE user_in_room = '"+ username +"'");
+        var rooms = [];
+        var chat_end = [];
+        for(i=0; i<rooms_list.rows.length; i++)
+        {
+            rooms[i] = rooms_list.rows[i].room_name;
+            const listchat = await client.query("SELECT * FROM thingtalk WHERE room = '"+ rooms[i] +"'");
+            // console.log(listchat);
+            if(listchat.rows.length>0)
+            {
+                chat_end[i] = listchat.rows[listchat.rows.length-1];
+            }
+            else
+            {
+                chat_end[i] = {
+                    "room": rooms[i],
+                    "chat": ""
+                };
+            }
+            // console.log(chat_end);
         };
+        socket.emit('list_room', chat_end);
+    });
+
+    socket.on('call_chat', async (name, room) => {
+        socket.name = name;
+        socket.room = room;
+        socket.broadcast.in(socket.room).emit("message_connected", name);
+        socket.join(room);
+        //GET DATA OLD
+        try //GET NEW CHAT MESSAGE AFTER CLICK DELETE
+        {
+            const time_deleted = await client.query("SELECT time FROM delete_chattext WHERE room = '"+ socket.room +"' AND name = '"+ socket.name +"'");
+            const date_deleted = await client.query("SELECT TO_CHAR(date :: DATE, 'yyyy-mm-dd') from delete_chattext WHERE room = '"+ socket.room +"' AND name = '"+ socket.name +"'");
+            const result = await client.query("SELECT * FROM thingtalk WHERE time >= '"+ time_deleted.rows[time_deleted.rows.length-1].time +"' AND date >= '"+ date_deleted.rows[date_deleted.rows.length-1].to_char +"'");
+            socket.emit("old_message", result.rows, socket.name);
+            // console.log("log new data after delete");
+        }
+        catch(error) //GET ALL CHAT MESSAGE WITH USER NOT HAVE DELETE INFO
+        {
+            const result = await client.query("SELECT * FROM thingtalk WHERE room = '"+ socket.room +"'");
+            socket.emit("old_message", result.rows, socket.name);
+            // console.log("log old data all");
+        }
     });
 
     socket.on('delete_chat', () =>{
         delete_chat(socket.name, socket.room);
     });
+
 
     socket.on('data_send', async (data) =>{
         console.log("Receipt data: "+ data);
@@ -169,6 +198,10 @@ io.on('connection', (socket) => {
             insert_data("THING RESPONSE", socket.room, sensor_dt);
         }
     });
+
+
+
+ 
 });
 
 app.get("/", function(req, res){
