@@ -103,13 +103,29 @@ io.on('connection', (socket) => {
             // console.log("added_room")
             }
         });
+        // REFRESH LIST ROOM
         const rooms_list = await client.query("SELECT room_name FROM rooms WHERE user_in_room = '"+ username +"'");
-                var rooms = [];
-                for(i=0; i<rooms_list.rows.length; i++)
-                {
-                    rooms[i] = rooms_list.rows[i];
+        var rooms = [];
+        var chat_end = [];
+        for(i=0; i<rooms_list.rows.length; i++)
+        {
+            rooms[i] = rooms_list.rows[i].room_name;
+            const listchat = await client.query("SELECT * FROM thingtalk WHERE room = '"+ rooms[i] +"'");
+            // console.log(listchat);
+            if(listchat.rows.length>0)
+            {
+                chat_end[i] = listchat.rows[listchat.rows.length-1];
+            }
+            else
+            {
+                chat_end[i] = {
+                    "room": rooms[i],
+                    "chat": ""
                 };
-                socket.emit('list_room', rooms);
+            }
+            // console.log(chat_end);
+        };
+        socket.emit('list_room', chat_end);
     });
     
     socket.on('list_room', async (username) =>{

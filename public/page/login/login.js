@@ -1,4 +1,4 @@
-var socket = io("http://54.180.31.210:3000/");
+var socket = io("http://localhost:3000");
 
 function sendUser(){
     var username = document.getElementById("user").value;
